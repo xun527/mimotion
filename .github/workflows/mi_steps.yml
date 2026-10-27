@@ -1,0 +1,33 @@
+name: Xiaomi Steps
+
+on:
+  schedule:
+    # UTC 时间 02:00 = 北京时间 10:00
+    - cron: '0 2 * * *'
+  workflow_dispatch: # 支持手动触发，方便测试
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Lexin steps script (乐心)
+        env:
+          LEXIN_ACCOUNTS: ${{ secrets.LEXIN_ACCOUNTS }}
+        run: python step_lexin.py
+
+      - name: Run Huami steps script (华米，限流可能失败)
+        continue-on-error: true
+        env:
+          MI_PHONE: ${{ secrets.MI_PHONE }}
+          MI_MAIL: ${{ secrets.MI_MAIL }}
+          MI_PASSWORD: ${{ secrets.MI_PASSWORD }}
+        run: python step_api_github.py
